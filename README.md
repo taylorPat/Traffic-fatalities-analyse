@@ -1,78 +1,73 @@
-# **Traffic Fatality Analysis and Data Pipeline Development using FARS Dataset**
+1. What is the overall distribution of parking transaction durations?
+You can calculate the distribution of parking durations (from the time a vehicle enters to when it exits). This will help you understand the average and most common durations.
 
-Dataset: [FARS Dataset](https://www.nhtsa.gov/file-downloads?p=nhtsa/downloads/FARS/)
+2. What is the busiest day of the week for parking?
+You can group parking transactions by days of the week and analyze which days have the highest number of transactions.
 
-## **Project Overview:**
+3. What are the peak hours for parking in the area?
+By grouping transactions by time (e.g., hour of the day), you can determine the times during which parking demand is highest.
 
-This project focuses on the design, development, and deployment of a data engineering pipeline for processing and analyzing the **Fatality Analysis Reporting System (FARS)** dataset. The dataset, maintained by the National Highway Traffic Safety Administration (NHTSA), provides detailed information on fatal motor vehicle crashes in the United States. The primary goal of this project is to create a scalable, automated pipeline that can efficiently ingest, clean, transform, and store this large dataset for further analysis. Additionally, the project will develop a system to generate actionable insights and build a foundation for future traffic safety research and machine learning models.
+4. What is the average revenue generated per transaction or per hour?
+You can compute the revenue from parking transactions and analyze average revenue per transaction or per time unit (hour, day, etc.).
 
-## **Objectives:**
+5. Are there any patterns in parking violations or overstay occurrences?
+Analyze transactions where vehicles overstayed their parking duration or where there were violations. You can calculate how often this occurs, the average fine, and the impact on revenue.
 
-1. **Data Ingestion**: Design and implement an automated process to ingest the FARS dataset, which is available in CSV format. The process will be scheduled to fetch the most recent data updates from the NHTSA website, ensuring the pipeline remains up-to-date.
-2. **Data Cleaning & Transformation**: Develop scripts to clean the raw data, including handling missing values, removing duplicates, standardizing date and time formats, and transforming the dataset for further analysis.
-3. **Data Storage**: Implement a scalable data storage solution, using either relational databases (e.g., PostgreSQL) or cloud-based storage (e.g., AWS S3, Google Cloud Storage), to store the cleaned data in a structured and easily accessible format.
-4. **Data Modeling**: Create an optimized data model that can support efficient querying and analysis. This will include establishing relationships between different entities (e.g., crashes, vehicles, drivers) and organizing the data into fact and dimension tables.
-5. **Data Analysis & Reporting**: Provide tools and scripts to run analytical queries, such as identifying trends in crash data, the impact of weather conditions on fatal accidents, and high-risk geographical areas. The project will also produce dashboards and reports that summarize insights for decision-makers and stakeholders.
-6. **Future Enhancements**: Build a foundation for predictive models to forecast crash occurrences or the likelihood of severe outcomes based on various factors such as weather, time of day, and driver characteristics.
+6. Which parking spots are most frequently used?
+If the dataset includes information about the parking spots (e.g., parking spot ID or location), you can determine which spots have the highest frequency of transactions.
 
-## **Technologies and Tools:**
+7. How does the parking behavior differ on weekends vs weekdays?
+You can compare parking behavior between weekdays and weekends. This could include transaction volume, duration, and revenue analysis.
 
-- **Data Ingestion**: Python (Pandas, Requests), Apache Airflow (for scheduling and automation)
-- **Data Cleaning & Transformation**: Python (Pandas, NumPy), SQL, Apache Spark (for large-scale data processing)
-- **Data Storage**: PostgreSQL, Amazon S3, Google Cloud Storage
-- **Data Modeling**: Relational databases (PostgreSQL), Snowflake schema, Data warehousing techniques
-- **Data Analysis & Reporting**: SQL, Python (Matplotlib, Seaborn), Tableau/Power BI for visualizations
-- **Automation & Monitoring**: Apache Airflow, Docker (for containerization), AWS Lambda (for serverless computing)
+8. What is the relationship between transaction duration and transaction amount?
+You could analyze whether longer parking durations result in higher fees or if there are flat-rate pricing structures.
 
-## **Project Phases:**
+9. How does parking demand vary by season?
+If there’s date information in the dataset, you can analyze how parking demand fluctuates by season or month, such as identifying any trends during holidays or major events.
 
-### 1. **Phase 1 - Data Ingestion & Initial Setup:**
+10. What is the trend in parking transactions over time (e.g., month-over-month, year-over-year)?
+You can perform time-series analysis to observe how parking demand and revenue evolve over time.
 
-- Research and gather the FARS dataset from the NHTSA website.
-- Implement a script or ETL pipeline to download and ingest the dataset periodically.
-- Set up automated data ingestion and ensure that data is consistently updated.
+11. What percentage of vehicles are long-term parkers vs. short-term parkers?
+Based on the parking duration, classify vehicles into long-term and short-term parkers and determine the proportion.
 
-### 2. **Phase 2 - Data Cleaning & Transformation:**
+12. Are there differences in parking behavior by parking location or facility (if available in the dataset)?
+If the dataset includes parking lot or facility information, you can analyze transaction patterns, usage, and revenue across different locations.
 
-- Handle missing values and outliers in the dataset.
-- Standardize date-time formats and clean categorical columns (e.g., crash type, vehicle type).
-- Implement logic to categorize the crash severity, injury levels, and road conditions.
+13. Can we predict parking transaction volumes based on the time of day, day of the week, or other factors?
+Using machine learning, you can build models to predict parking demand based on factors such as time, weather, day, or location.
 
-### 3. **Phase 3 - Data Storage & Structuring:**
+14. Is there any correlation between transaction volume and events or holidays?
+If event data is available or if the dataset spans over holidays, you can investigate how specific events or holidays impact parking demand.
 
-- Design a scalable database schema for the cleaned data.
-- Set up a relational database (PostgreSQL) or a cloud-based data lake (S3, BigQuery).
-- Populate the database with the transformed data, ensuring optimal indexing and partitioning for fast querying.
+15. How often do vehicles occupy parking spots for the maximum allowed time?
+You can analyze the frequency with which vehicles park for the maximum allowed time and investigate whether this leads to underutilization or overbooking of parking spots.
 
-### 4. **Phase 4 - Data Analysis & Reporting:**
+16. What is the total revenue generated by each parking lot over time?
+By grouping transactions by parking lot (if data is available), you can calculate the total revenue generated for each parking lot and identify trends.
 
-- Develop SQL queries and Python scripts to explore the dataset and identify key trends (e.g., weather-related accidents, geographic hotspots).
-- Implement visualizations and dashboards that provide insights into traffic safety (e.g., crash frequency by time of day, crash severity by region).
+17. Are there any anomalies or outliers in parking transactions (e.g., unusually long parking times, incorrect fees)?
+Perform anomaly detection to identify any outliers in transaction data, such as unusually long parking durations or transactions with incorrect fees.
 
-### 5. **Phase 5 - Predictive Modeling (Future Enhancement):**
+18. What is the parking turnover rate (how often do parking spots become available)?
+Calculate the turnover rate by tracking the time it takes for a parking spot to be vacated after being occupied.
 
-- Explore the use of machine learning models to predict the likelihood of fatalities based on features like weather, time of day, driver characteristics, etc.
-- Use libraries like **scikit-learn** or **TensorFlow** to develop predictive models.
+19. How does parking demand correlate with nearby business hours or events?
+If the dataset is linked to business locations, you can analyze how parking demand is influenced by the opening and closing hours of nearby businesses.
 
-## **Project Deliverables:**
+Suggested Data Engineering Project Ideas:
+Data Pipeline for Parking Transactions:
 
-1. **Data Pipeline**: A robust, automated data pipeline that can handle the periodic ingestion, transformation, and storage of the FARS dataset.
-2. **Database Schema**: A relational database or cloud storage solution with optimized data models, making the data easy to query and analyze.
-3. **Insights & Visualizations**: Dashboards and reports that summarize key findings about traffic fatalities, including trends and high-risk areas.
-4. **Documentation**: Detailed documentation on how the pipeline works, including setup instructions, the data model, and the analysis performed.
+Build a data pipeline that ingests parking transaction data, cleans the data, and stores it in a database or data warehouse. Use tools like Apache Kafka for real-time data ingestion, Apache Spark for data processing, and SQL databases like PostgreSQL or NoSQL solutions like MongoDB for storage.
 
-## **Potential Impact and Use Cases:**
+Real-Time Parking Availability Dashboard:
 
-- **Traffic Safety Improvements**: By analyzing trends in traffic fatalities, policymakers and traffic safety organizations can prioritize areas that need intervention, such as implementing stricter speed limits or better road signage.
-- **Insurance Risk Assessment**: Insurance companies can use the data to refine their risk assessment models by considering factors such as road conditions, driver demographics, and crash history.
-- **Predictive Models**: Future machine learning models can predict accident severity or the likelihood of fatalities, helping to improve public safety measures, emergency response strategies, and insurance models.
+Create a real-time dashboard that monitors parking transaction data and shows available spots, peak parking times, and revenue generation using tools like Apache Flink or Spark Streaming combined with visualization tools like Tableau or Power BI.
 
-## **Challenges and Considerations:**
+Time-Series Forecasting for Parking Demand:
 
-- **Data Quality**: Ensuring the accuracy and completeness of the dataset, especially when dealing with large and noisy datasets like FARS.
-- **Scalability**: Designing the pipeline to handle updates and expansions of the dataset without compromising performance.
-- **Data Privacy**: Although the FARS dataset is anonymized, care should be taken when combining it with external datasets to avoid inadvertent exposure of personal information.
+Implement machine learning models to forecast parking demand based on historical transaction data. You could use models like ARIMA, Prophet, or even neural networks like LSTMs for more accurate time-series forecasting.
 
----
+Building an ETL Process for Parking Data:
 
-This project will help you gain hands-on experience with data engineering practices such as ETL processes, database design, automation, and data analysis, while also contributing valuable insights to the field of traffic safety.
+Develop an ETL (Extract, Transform, Load) pipeline to gather data from different parking transaction sources (e.g., APIs, CSV files, databases), clean the data, and load it into a data warehouse or analytical database for reporting and analysis.
