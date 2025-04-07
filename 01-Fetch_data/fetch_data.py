@@ -1,31 +1,33 @@
-# https://www.nhtsa.gov/file-downloads?p=nhtsa/downloads/FARS/1975/National/
-
 from kaggle.api.kaggle_api_extended import KaggleApi
 import pyspark
 from pyspark.sql import SparkSession, types, DataFrame
-from pyspark.sql.functions import to_timestamp, col, round
+from pyspark.sql.functions import to_timestamp, col, round, year, month, dayofweek
+import tempfile
 
-# TODO: Save .csv and .parquet files inside temp directory
+
 def main(dataset_name: str):
-    csv_file_path = download_csv(
-        dataset_name=dataset_name
-    )
-    create_parquet_files(csv_file_path=csv_file_path)
+    download_csv_file_name = "parking_transactions.csv"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        csv_file_path = download_csv(
+            dataset_name=dataset_name,
+            download_directory=temp_dir,
+            download_csv_file_name=download_csv_file_name,
+        )
+        create_parquet_files(csv_file_path=csv_file_path)
 
 
 def download_csv(
-    dataset_name: str,
+    dataset_name: str, download_directory: str, download_csv_file_name: str
 ) -> str:
     api = KaggleApi()
     api.authenticate()
-    path = api.dataset_download_file(
+    _ = api.dataset_download_file(
         dataset=dataset_name,
-        file_name="Parking_Transactions.csv",
-        path="~/Traffic-fatalities-analyse/data",
+        file_name=download_csv_file_name,
+        path=download_directory,
         quiet=False,
     )
-    print(f"Saved dataset to {path}")
-    return "~/Traffic-fatalities-analyse/data/Parking_Transactions.csv"
+    return f"{download_directory}/{download_csv_file_name}"
 
 
 def create_parquet_files(csv_file_path: str):
@@ -34,6 +36,7 @@ def create_parquet_files(csv_file_path: str):
 
     df = rename_columns(df=df)
     df = format_datatime(df=df)
+    df = add_columns(df=df)
     save_as_parquet(df=df, repartition=12)
 
 
@@ -73,6 +76,14 @@ def format_datatime(df: DataFrame) -> DataFrame:
     )
 
 
+def add_columns(df: DataFrame) -> DataFrame:
+    return (
+        df.withColumn("year", year(col("start_datetime")))
+        .withColumn("month", month(col("start_datetime")))
+        .withColumn("day_of_week", dayofweek(col("start_datetime")))
+    )
+
+
 def save_as_parquet(df: DataFrame, repartition: int):
     print("Save as parquet files...")
     df = df.repartition(repartition)
@@ -85,6 +96,9 @@ def save_as_parquet(df: DataFrame, repartition: int):
         "duration_in_min",
         "amount",
         "amount_per_hour",
+        "year",
+        "month",
+        "day_of_week",
         "app_zone_id",
         "app_zone_group",
         "payment_method",
