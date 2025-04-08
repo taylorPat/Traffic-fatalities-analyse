@@ -42,3 +42,31 @@ SELECT
 FROM
     `traffic-fatalities-455213.parking_transactions.parking`;
 ```
+
+```sql
+-- Partition by month
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_month`
+PARTITION BY
+  RANGE_BUCKET(month, GENERATE_ARRAY(1, 12, 1))
+AS
+SELECT *  FROM `traffic-fatalities-455213.parking_transactions.parking`;
+
+-- Partition by weekday
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_weekday`
+PARTITION BY
+  RANGE_BUCKET(day_of_week, GENERATE_ARRAY(0, 7, 1))
+AS
+SELECT
+    *,
+    CASE 
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 1 THEN 'Sunday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 2 THEN 'Monday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 3 THEN 'Tuesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 4 THEN 'Wednesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 5 THEN 'Thursday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 6 THEN 'Friday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 7 THEN 'Saturday'
+    END AS day_of_week_str,
+FROM
+    `traffic-fatalities-455213.parking_transactions.parking`;
+```
