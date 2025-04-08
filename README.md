@@ -1,73 +1,90 @@
-1. What is the overall distribution of parking transaction durations?
-You can calculate the distribution of parking durations (from the time a vehicle enters to when it exits). This will help you understand the average and most common durations.
+# Parking transactions analysis
 
-2. What is the busiest day of the week for parking?
-You can group parking transactions by days of the week and analyze which days have the highest number of transactions.
+# TODO: IaC with terraform
 
-3. What are the peak hours for parking in the area?
-By grouping transactions by time (e.g., hour of the day), you can determine the times during which parking demand is highest.
+## TLDR;
+This project analyzes US parking transaction data to identify patterns in weekday and monthly transaction distributions, providing insights to optimize parking policies and infrastructure.
 
-4. What is the average revenue generated per transaction or per hour?
-You can compute the revenue from parking transactions and analyze average revenue per transaction or per time unit (hour, day, etc.).
+**Tools used within this project**  
+🐍 Python for defining pipeline scripts  
+🔥 Apache Spark for data batch processing and transformation  
+☁️ Google Cloud Storage as Data Lake for storing .parquet files  
+🏗️ Google Cloud BigQuery as Data Warehouse  
+📊 Google Looker Studio for visualization
 
-5. Are there any patterns in parking violations or overstay occurrences?
-Analyze transactions where vehicles overstayed their parking duration or where there were violations. You can calculate how often this occurs, the average fine, and the impact on revenue.
+**Dataset**  
+[Parking Transaction](https://www.kaggle.com/datasets/aniket0712/parking-transactions) dataset.
 
-6. Which parking spots are most frequently used?
-If the dataset includes information about the parking spots (e.g., parking spot ID or location), you can determine which spots have the highest frequency of transactions.
+**Output**  
+> [!NOTE]
+> The dashboard can be found [here](https://lookerstudio.google.com/reporting/f80ea899-3c74-466c-8167-719864046e90)
 
-7. How does the parking behavior differ on weekends vs weekdays?
-You can compare parking behavior between weekdays and weekends. This could include transaction volume, duration, and revenue analysis.
+![alt text](attachments/dashboard.png)
 
-8. What is the relationship between transaction duration and transaction amount?
-You could analyze whether longer parking durations result in higher fees or if there are flat-rate pricing structures.
 
-9. How does parking demand vary by season?
-If there’s date information in the dataset, you can analyze how parking demand fluctuates by season or month, such as identifying any trends during holidays or major events.
+## Problem Description
 
-10. What is the trend in parking transactions over time (e.g., month-over-month, year-over-year)?
-You can perform time-series analysis to observe how parking demand and revenue evolve over time.
+The goal of this data engineering project is to analyze parking transaction data across the United States in order to identify patterns and trends related to parking behaviors. The dataset consists of transaction records, including timestamps and other relevant metadata, such as location and transaction amount whereby the location and transactin amount have not been considered until now (but can be added in another iteration). The project focuses on providing insights into the temporal distribution of parking transactions, specifically across weekdays and months of the year.
 
-11. What percentage of vehicles are long-term parkers vs. short-term parkers?
-Based on the parking duration, classify vehicles into long-term and short-term parkers and determine the proportion.
+**Two key visualizations will be generated to support this analysis:**
 
-12. Are there differences in parking behavior by parking location or facility (if available in the dataset)?
-If the dataset includes parking lot or facility information, you can analyze transaction patterns, usage, and revenue across different locations.
+- Weekday Distribution of Transactions: This plot will display the relative distribution of parking transactions across different weekdays, helping to understand which days of the week experience the highest and lowest parking activity. This could reveal insights into peak parking demand on specific weekdays and assist cities or businesses in optimizing parking policies, pricing models, or enforcement strategies.
 
-13. Can we predict parking transaction volumes based on the time of day, day of the week, or other factors?
-Using machine learning, you can build models to predict parking demand based on factors such as time, weather, day, or location.
+- Monthly Transaction Distribution: This plot will visualize the number of parking transactions by month throughout the year, offering insights into seasonal trends and fluctuations in parking demand. This analysis will help in understanding whether parking transactions tend to increase during certain months (e.g., summer or holiday periods) and can assist in predicting future demand patterns.
 
-14. Is there any correlation between transaction volume and events or holidays?
-If event data is available or if the dataset spans over holidays, you can investigate how specific events or holidays impact parking demand.
+By analyzing these two visualizations, the project aims to uncover temporal trends in parking behavior across different regions, ultimately providing actionable insights that can inform urban planning, parking infrastructure development, and policy decisions to better serve users and optimize parking resources.
 
-15. How often do vehicles occupy parking spots for the maximum allowed time?
-You can analyze the frequency with which vehicles park for the maximum allowed time and investigate whether this leads to underutilization or overbooking of parking spots.
+## Technical details
+### Cloud
+The project is developed inside Google Cloud Platform leveraging Google Cloud Storage as data lake and Google BigQuery as data warehouse.
 
-16. What is the total revenue generated by each parking lot over time?
-By grouping transactions by parking lot (if data is available), you can calculate the total revenue generated for each parking lot and identify trends.
+### Data ingestion
+There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) which includes:
+- Downloading the data from kaggle as _.csv_ file to a temporary directory
+- Reading the _.csv_ file with spark, renaming and adding columns, formating datetime colums, creating and applying a schema and saving the dataframe as _.parquet_ files using repartition in a temporary directory
+- Uploading the _.parquet_ files to Google Cloud Storage
+- Inserting the data from Google Cloud Storage to Google Big Query table called _parking_
 
-17. Are there any anomalies or outliers in parking transactions (e.g., unusually long parking times, incorrect fees)?
-Perform anomaly detection to identify any outliers in transaction data, such as unusually long parking durations or transactions with incorrect fees.
+> [!HINT]  
+> The **[end_to_end.py](/pipelines/end_to_end.py)** pipeline combines **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)** pipeline wich is responsible for uploading data to Google Cloud Storage and **[move_to_gbq.py](/pipelines/move_to_gbq.py)** which moves the data to Google BigQuery.
 
-18. What is the parking turnover rate (how often do parking spots become available)?
-Calculate the turnover rate by tracking the time it takes for a parking spot to be vacated after being occupied.
+### Data warehouse
+Based on the _parking_ table two further tables are created using partition in order to make optimize the queries for upstream queries.
 
-19. How does parking demand correlate with nearby business hours or events?
-If the dataset is linked to business locations, you can analyze how parking demand is influenced by the opening and closing hours of nearby businesses.
+For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the day_of_week column (which was extracted from the start_datetime column using pyspark inside the pipeline and defines the days of the week as integer) was implemented because the tile uses just the information about the days of the week.
+```sql
+-- Partition by weekday
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_weekday`
+PARTITION BY
+  RANGE_BUCKET(day_of_week, GENERATE_ARRAY(1, 7, 1))
+AS
+SELECT
+    *,
+    CASE 
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 1 THEN 'Sunday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 2 THEN 'Monday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 3 THEN 'Tuesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 4 THEN 'Wednesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 5 THEN 'Thursday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 6 THEN 'Friday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 7 THEN 'Saturday'
+    END AS day_of_week_str,
+FROM
+    `traffic-fatalities-455213.parking_transactions.parking`;
+```
 
-Suggested Data Engineering Project Ideas:
-Data Pipeline for Parking Transactions:
+For the tiles on the right side which shows the amount of transactions over the different month a partition by the month column (which was extracted from the start_datetime column using pyspark inside the pipeline and defines the month as integer) was considered reasonable because the data is sorted by month.
+```sql
+-- Partition by month
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_month`
+PARTITION BY
+  RANGE_BUCKET(month, GENERATE_ARRAY(1, 12, 1))
+AS
+SELECT *  FROM `traffic-fatalities-455213.parking_transactions.parking`;
+```
 
-Build a data pipeline that ingests parking transaction data, cleans the data, and stores it in a database or data warehouse. Use tools like Apache Kafka for real-time data ingestion, Apache Spark for data processing, and SQL databases like PostgreSQL or NoSQL solutions like MongoDB for storage.
+### Transformations
 
-Real-Time Parking Availability Dashboard:
+### Dashboard
 
-Create a real-time dashboard that monitors parking transaction data and shows available spots, peak parking times, and revenue generation using tools like Apache Flink or Spark Streaming combined with visualization tools like Tableau or Power BI.
-
-Time-Series Forecasting for Parking Demand:
-
-Implement machine learning models to forecast parking demand based on historical transaction data. You could use models like ARIMA, Prophet, or even neural networks like LSTMs for more accurate time-series forecasting.
-
-Building an ETL Process for Parking Data:
-
-Develop an ETL (Extract, Transform, Load) pipeline to gather data from different parking transaction sources (e.g., APIs, CSV files, databases), clean the data, and load it into a data warehouse or analytical database for reporting and analysis.
+### Reproducibility
