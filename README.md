@@ -53,6 +53,7 @@ Based on the _parking_ table two further tables are created using partition in o
 For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the _day_of_week_ column (which was extracted from the _start_datetime_ column using pyspark inside the pipeline and defines the days of the week as integer) was implemented because the tile uses just the information about the days of the week.
 ```sql
 -- Partition by weekday
+-- Adapt the names of your project id, dataset and table accordingly
 CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_weekday`
 PARTITION BY
   RANGE_BUCKET(day_of_week, GENERATE_ARRAY(1, 7, 1))
@@ -75,6 +76,7 @@ FROM
 For the tiles on the right side which shows the amount of transactions over the different month a partition by the _month_ column (which was extracted from the _start_datetime_ column using pyspark inside the pipeline and defines the month as integer) was considered reasonable because the data is sorted by month.
 ```sql
 -- Partition by month
+-- Adapt the names of your project id, dataset and table accordingly
 CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_month`
 PARTITION BY
   RANGE_BUCKET(month, GENERATE_ARRAY(1, 12, 1))
@@ -185,3 +187,6 @@ terraform apply
 
 #### Execute pipeline 
 In order to orchestrate the whole workflow from downloading _.csv_ file until uploading structured data to Google BigQuery run `python pipelines/end_to_end.py` from your root directory.
+
+#### Create the partitioned tables inside big query
+For creating the partitioned tables go to Google Cloud BigQuery and execute the sql commands listed in the [data-warehouse](#data-warehouse) section.
