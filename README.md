@@ -46,10 +46,10 @@ There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) whic
 - Inserting the data from Google Cloud Storage to Google Big Query table called _parking_
 
 > [!NOTE]  
-> The **[end_to_end.py](/pipelines/end_to_end.py)** pipeline combines **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)** pipeline wich is responsible for uploading data to Google Cloud Storage and **[move_to_gbq.py](/pipelines/move_to_gbq.py)** which moves the data to Google BigQuery.
+> The **[end_to_end.py](/pipelines/end_to_end.py)** pipeline combines **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)** pipeline wich is responsible for downloading data from kaggle until uploading data to Google Cloud Storage and **[move_to_gbq.py](/pipelines/move_to_gbq.py)** which moves the data from Google Cloud Storage to Google BigQuery.
 
 ### Data warehouse
-Based on the _parking_ table two further tables are created using partition in order to make optimize the queries for upstream queries.
+Based on the _parking_ table two further tables are created using partition in order to optimize the queries for upstream tasks.
 
 For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the _day_of_week_ column (which was extracted from the _start_datetime_ column using pyspark inside the pipeline and defines the days of the week as integer) was implemented because the tile uses just the information about the days of the week.
 ```sql
