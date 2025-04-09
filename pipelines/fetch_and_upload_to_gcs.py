@@ -22,10 +22,3 @@ def main(dataset_name: str, download_csv_file_name: str):
             temporary_dir=temp_dir, csv_file_path=csv_file_path, schema=SCHEMA
         )
         upload_files_to_gcs(source_file_path=parquet_dir, blob_name="parquet")
-
-
-if __name__ == "__main__":
-    main(
-        dataset_name="aniket0712/parking-transactions",
-        download_csv_file_name="parking_transactions.csv",
-    )

@@ -2,8 +2,6 @@ import pathlib
 from google.cloud import storage
 import os
 
-
-# TODO: Filter out just parquet files
 def upload_parquet_to_gcs(
     source_file_path: str, blob_name: str, bucket_name: str | None = None
 ):
