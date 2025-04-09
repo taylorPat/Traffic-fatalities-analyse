@@ -158,3 +158,26 @@ def _add_columns(df: DataFrame) -> DataFrame:
 > The dashboard can be found [here](https://lookerstudio.google.com/reporting/f80ea899-3c74-466c-8167-719864046e90).
 
 ### Reproducibility
+#### Prerequisites  
+**Tools**
+- Python 3.12
+- Spark 3.3.2
+
+**Python packages**
+- Install the packages listed inside [_requirements.txt_](requirements.txt) file in your environment.
+
+**Environment variables**  
+Create an _.env_ file in your root directory based on the _.env.example_ file and export the enviroment variables to your current terminal using `export $(grep -v '^#' .env | xargs)`.
+
+**Google Cloud Platform**  
+Create a service account with admin permissions for Google Cloud Storage, Google BigQuery and Compute Engine
+
+> [!HINT]  
+> Use `gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS` for authorizing with Google Cloud Platform with your service account in order to be able to create, access and upload Google Cloud Storage and Google BigQuery. 
+
+
+#### Setup Infrastructure
+TODO: Terraform
+
+#### Execute pipeline 
+In order to orchestrate the whole workflow from downloading _.csv_ file until uploading structured data to Google BigQuery run `python pipelines/end_to_end.py`
