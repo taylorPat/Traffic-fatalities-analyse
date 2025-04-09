@@ -45,7 +45,7 @@ There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) whic
 - Uploading the _.parquet_ files to Google Cloud Storage
 - Inserting the data from Google Cloud Storage to Google Big Query table called _parking_
 
-> [!HINT]  
+> [!NOTE]  
 > The **[end_to_end.py](/pipelines/end_to_end.py)** pipeline combines **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)** pipeline wich is responsible for uploading data to Google Cloud Storage and **[move_to_gbq.py](/pipelines/move_to_gbq.py)** which moves the data to Google BigQuery.
 
 ### Data warehouse
@@ -172,7 +172,7 @@ Create an _.env_ file in your root directory based on the _.env.example_ file an
 **Google Cloud Platform**  
 Create a service account with admin permissions for Google Cloud Storage, Google BigQuery and Compute Engine
 
-> [!HINT]  
+> [!Note]  
 > Use `gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS` for authorizing with Google Cloud Platform with your service account in order to be able to create, access and upload Google Cloud Storage and Google BigQuery. 
 
 
