@@ -45,9 +45,6 @@ def _format_datatime(df: DataFrame) -> DataFrame:
             "modification_datetime",
             to_timestamp("Last Updated", "MM/dd/yyyy hh:mm:ss a"),
         )
-        .withColumn(
-            "amount_per_hour", round((col("amount") / col("duration_in_min")) * 60, 2)
-        )
     )
 
 
@@ -56,6 +53,9 @@ def _add_columns(df: DataFrame) -> DataFrame:
         df.withColumn("year", year(col("start_datetime")))
         .withColumn("month", month(col("start_datetime")))
         .withColumn("day_of_week", dayofweek(col("start_datetime")))
+        .withColumn(
+            "amount_per_hour", round((col("amount") / col("duration_in_min")) * 60, 2)
+        )
     )
 
 
