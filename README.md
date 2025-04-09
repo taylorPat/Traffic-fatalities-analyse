@@ -1,12 +1,11 @@
 # Parking transactions analysis
 
-# TODO: IaC with terraform
-
 ## TLDR;
 This project analyzes US parking transaction data to identify patterns in weekday and monthly transaction distributions, providing insights to optimize parking policies and infrastructure.
 
 **Tools used within this project**  
 🐍 Python for defining pipeline scripts  
+🏗️ Terraform for managing infrastructure as code
 🔥 Apache Spark for data batch processing and transformation  
 ☁️ Google Cloud Storage as Data Lake for storing .parquet files  
 🏗️ Google Cloud BigQuery as Data Warehouse  
@@ -167,7 +166,7 @@ def _add_columns(df: DataFrame) -> DataFrame:
 - Install the packages listed inside [_requirements.txt_](requirements.txt) file in your environment.
 
 **Environment variables**  
-Create an _.env_ file in your root directory based on the _.env.example_ file and export the enviroment variables to your current terminal using `export $(grep -v '^#' .env | xargs)`.
+Create an _.env_ file in your root directory based on the _.env.example_ file and export the enviroment variables to your current terminal using `source .env`.
 
 **Google Cloud Platform**  
 Create a service account with admin permissions for Google Cloud Storage, Google BigQuery and Compute Engine
@@ -177,7 +176,12 @@ Create a service account with admin permissions for Google Cloud Storage, Google
 
 
 #### Setup Infrastructure
-TODO: Terraform
+```bash
+cd terraform/
+
+# create bucket and dataset
+terraform apply
+```
 
 #### Execute pipeline 
-In order to orchestrate the whole workflow from downloading _.csv_ file until uploading structured data to Google BigQuery run `python pipelines/end_to_end.py`
+In order to orchestrate the whole workflow from downloading _.csv_ file until uploading structured data to Google BigQuery run `python pipelines/end_to_end.py` from your root directory.
