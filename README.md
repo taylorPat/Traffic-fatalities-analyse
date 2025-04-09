@@ -13,7 +13,7 @@ This project analyzes US parking transaction data to identify patterns in weekda
 📊 Google Looker Studio for visualization
 
 **Dataset**  
-[Parking Transaction](https://www.kaggle.com/datasets/aniket0712/parking-transactions) dataset.
+[Parking Transaction](https://www.kaggle.com/datasets/aniket0712/parking-transactions) dataset including over 15 million records.
 
 **Output**  
 > [!NOTE]
