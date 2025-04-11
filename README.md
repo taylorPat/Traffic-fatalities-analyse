@@ -33,62 +33,42 @@ The goal of this data engineering project is to analyze parking transaction data
 
 By analyzing these two visualizations, the project aims to uncover temporal trends in parking behavior across different regions, ultimately providing actionable insights that can inform urban planning, parking infrastructure development, and policy decisions to better serve users and optimize parking resources.
 
-## Technical details
-### Architecture
+## Architecture
 ![](attachments/architecture.drawio.svg)
 
-### Cloud
-The project is developed inside Google Cloud Platform leveraging Google Cloud Storage as data lake and Google BigQuery as data warehouse.
+### Dataset
+| Rows                | Type     | Nullable | Example                |
+|---------------------|----------|----------|------------------------|
+| Transaction ID      | int      | False    | 91886070               |
+| Source              | text     | False    | Parking Meters         |
+| Duration in Minutes | float    | False    | 219.9                  |
+| Start Time          | datetime | False    | 03/16/2023 08:19:05 PM |
+| End Time            | datetime | False    | 04/16/2023 18:08:33 PM |
+| Amount              | float    | False    | 9.16                   |
+| App Zone ID         | int      | True     | 39744                  |
+| App Zone Group      | text     | True     | East Austin PTMD       |
+| Payment Method      | text     | False    | CARD                   |
+| Location Group      | text     | True     | East Austin            |
+| Last Updated        | datetime | False    | 04/16/2023 18:08:33 PM |
 
-### Data ingestion
-There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) which includes:
+### Data transformation and ingestion
+There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) which can be splitted into two major pieces.
+
+The first pipeline is responsible for:
 - Downloading the data from kaggle as _.csv_ file to a temporary directory
-- Reading the _.csv_ file with spark, renaming and adding columns, formating datetime colums, creating and applying a schema and saving the dataframe as _.parquet_ files using repartition in a temporary directory
+- Reading the _.csv_ file with spark, applying transformation and saving the dataframe as _.parquet_ files using repartition in a temporary directory
 - Uploading the _.parquet_ files to Google Cloud Storage
+
+> [!NOTE]  
+> See the python script **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)**.
+
+The second pipeline is responsible for:
 - Inserting the data from Google Cloud Storage to Google Big Query table called _parking_
 
 > [!NOTE]  
-> The **[end_to_end.py](/pipelines/end_to_end.py)** pipeline combines **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)** pipeline wich is responsible for downloading data from kaggle until uploading data to Google Cloud Storage and **[move_to_gbq.py](/pipelines/move_to_gbq.py)** which moves the data from Google Cloud Storage to Google BigQuery.
+> See the python script **[move_to_gbq.py](/pipelines/move_to_gbq.py)**.
 
-### Data warehouse
-Based on the _parking_ table two further tables are created using partition in order to optimize the queries for upstream tasks.
-
-For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the _day_of_week_ column (which was extracted from the _start_datetime_ column using pyspark inside the pipeline and defines the days of the week as integer) was implemented because the tile uses just the information about the days of the week.
-```sql
--- Partition by weekday
--- Adapt the names of your project id, dataset and table accordingly
-CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_weekday`
-PARTITION BY
-  RANGE_BUCKET(day_of_week, GENERATE_ARRAY(1, 7, 1))
-AS
-SELECT
-    *,
-    CASE 
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 1 THEN 'Sunday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 2 THEN 'Monday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 3 THEN 'Tuesday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 4 THEN 'Wednesday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 5 THEN 'Thursday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 6 THEN 'Friday'
-      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 7 THEN 'Saturday'
-    END AS day_of_week_str,
-FROM
-    `traffic-fatalities-455213.parking_transactions.parking`;
-```
-
-For the tiles on the right side which shows the amount of transactions over the different month a partition by the _month_ column (which was extracted from the _start_datetime_ column using pyspark inside the pipeline and defines the month as integer) was considered reasonable because the data is sorted by month.
-```sql
--- Partition by month
--- Adapt the names of your project id, dataset and table accordingly
-CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_month`
-PARTITION BY
-  RANGE_BUCKET(month, GENERATE_ARRAY(1, 12, 1))
-AS
-SELECT *  FROM `traffic-fatalities-455213.parking_transactions.parking`;
-```
-
-### Transformations
-Transformations have been implemented using pyspark.
+Following transformations have been implemented inside the first pipeline using pyspark:
 #### Apply schema
 ```python
 SCHEMA = types.StructType(
@@ -154,6 +134,42 @@ def _add_columns(df: DataFrame) -> DataFrame:
         )
     )
 ```
+### Data warehouse
+Based on the _parking_ table (which has been the output of the second pipeline) two further tables are created using partition in order to optimize the queries for downstream tasks.
+
+For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the _day_of_week_ column was implemented because the tile uses just the information about the days of the week.
+```sql
+-- Partition by weekday
+-- Adapt the names of your project id, dataset and table accordingly
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_weekday`
+PARTITION BY
+  RANGE_BUCKET(day_of_week, GENERATE_ARRAY(1, 7, 1))
+AS
+SELECT
+    *,
+    CASE 
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 1 THEN 'Sunday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 2 THEN 'Monday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 3 THEN 'Tuesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 4 THEN 'Wednesday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 5 THEN 'Thursday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 6 THEN 'Friday'
+      WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 7 THEN 'Saturday'
+    END AS day_of_week_str,
+FROM
+    `traffic-fatalities-455213.parking_transactions.parking`;
+```
+
+For the tiles on the right side which shows the amount of transactions over the different month a partition by the _month_ column was considered reasonable because the data is sorted by month.
+```sql
+-- Partition by month
+-- Adapt the names of your project id, dataset and table accordingly
+CREATE OR REPLACE TABLE `traffic-fatalities-455213.parking_transactions.parking_partition_by_month`
+PARTITION BY
+  RANGE_BUCKET(month, GENERATE_ARRAY(1, 12, 1))
+AS
+SELECT *  FROM `traffic-fatalities-455213.parking_transactions.parking`;
+```
 
 ### Dashboard
 
@@ -166,6 +182,7 @@ def _add_columns(df: DataFrame) -> DataFrame:
 **Tools**
 - Python 3.12
 - Spark 3.3.2
+- Terraform 1.11.3
 
 **Python packages**
 - Install the packages listed inside [_requirements.txt_](requirements.txt) file in your environment.
@@ -193,3 +210,8 @@ In order to orchestrate the whole workflow from downloading _.csv_ file until up
 
 #### Create the partitioned tables inside big query
 For creating the partitioned tables go to Google Cloud BigQuery and execute the sql commands listed in the [data-warehouse](#data-warehouse) section.
+
+## Challenges
+- Setup of infrastructure like GCP, VM, installation of spark
+- Transforming datetime from US 12 hours format into unix-style datetime
+- Optimazation of table partition for downstream tasks
