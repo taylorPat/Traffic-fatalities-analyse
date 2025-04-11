@@ -34,6 +34,9 @@ The goal of this data engineering project is to analyze parking transaction data
 By analyzing these two visualizations, the project aims to uncover temporal trends in parking behavior across different regions, ultimately providing actionable insights that can inform urban planning, parking infrastructure development, and policy decisions to better serve users and optimize parking resources.
 
 ## Technical details
+### Architecture
+![](attachments/architecture.drawio.svg)
+
 ### Cloud
 The project is developed inside Google Cloud Platform leveraging Google Cloud Storage as data lake and Google BigQuery as data warehouse.
 
