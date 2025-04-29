@@ -1,6 +1,6 @@
 # Parking transactions analysis
 
-## TLDR;
+## TL;DR
 
 This project analyzes US parking transaction data to identify patterns in weekday and monthly transaction distributions, providing insights to optimize parking policies and infrastructure.
 
