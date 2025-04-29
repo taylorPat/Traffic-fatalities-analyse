@@ -1,11 +1,12 @@
 # Parking transactions analysis
 
 ## TLDR;
+
 This project analyzes US parking transaction data to identify patterns in weekday and monthly transaction distributions, providing insights to optimize parking policies and infrastructure.
 
 **Tools used within this project**  
 🐍 Python for defining pipeline scripts  
-🏗️ Terraform for managing infrastructure as code
+🏗️ Terraform for managing infrastructure as code  
 🔥 Apache Spark for data batch processing and transformation  
 ☁️ Google Cloud Storage as Data Lake for storing .parquet files  
 🏗️ Google Cloud BigQuery as Data Warehouse  
@@ -14,12 +15,12 @@ This project analyzes US parking transaction data to identify patterns in weekda
 **Dataset**  
 [Parking Transaction](https://www.kaggle.com/datasets/aniket0712/parking-transactions) dataset including over 15 million records.
 
-**Output**  
+**Output**
+
 > [!NOTE]
 > The dashboard can be found [here](https://lookerstudio.google.com/reporting/f80ea899-3c74-466c-8167-719864046e90).
 
 ![alt text](attachments/dashboard.png)
-
 
 ## Problem Description
 
@@ -34,11 +35,13 @@ The goal of this data engineering project is to analyze parking transaction data
 By analyzing these two visualizations, the project aims to uncover temporal trends in parking behavior across different regions, ultimately providing actionable insights that can inform urban planning, parking infrastructure development, and policy decisions to better serve users and optimize parking resources.
 
 ## Architecture
+
 ![](attachments/architecture.drawio.svg)
 
 ### Dataset
+
 | Rows                | Type     | Nullable | Example                |
-|---------------------|----------|----------|------------------------|
+| ------------------- | -------- | -------- | ---------------------- |
 | Transaction ID      | int      | False    | 91886070               |
 | Source              | text     | False    | Parking Meters         |
 | Duration in Minutes | float    | False    | 219.9                  |
@@ -52,9 +55,11 @@ By analyzing these two visualizations, the project aims to uncover temporal tren
 | Last Updated        | datetime | False    | 04/16/2023 18:08:33 PM |
 
 ### Data transformation and ingestion
+
 There is an end-to-end pipeline ([end_to_end.py](/pipelines/end_to_end.py)) which can be splitted into two major pieces.
 
 The first pipeline is responsible for:
+
 - Downloading the data from kaggle as _.csv_ file to a temporary directory
 - Reading the _.csv_ file with spark, applying transformation and saving the dataframe as _.parquet_ files using repartition in a temporary directory
 - Uploading the _.parquet_ files to Google Cloud Storage
@@ -63,13 +68,16 @@ The first pipeline is responsible for:
 > See the python script **[fetch_and_upload_to_gcs.py](/pipelines/fetch_and_upload_to_gcs.py)**.
 
 The second pipeline is responsible for:
+
 - Inserting the data from Google Cloud Storage to Google Big Query table called _parking_
 
 > [!NOTE]  
 > See the python script **[move_to_gbq.py](/pipelines/move_to_gbq.py)**.
 
 Following transformations have been implemented inside the first pipeline using pyspark:
+
 #### Apply schema
+
 ```python
 SCHEMA = types.StructType(
     [
@@ -90,6 +98,7 @@ SCHEMA = types.StructType(
 ```
 
 #### Renaming columns
+
 ```python
 def _rename_columns(df: DataFrame) -> DataFrame:
     print("Rename columns...")
@@ -107,6 +116,7 @@ def _rename_columns(df: DataFrame) -> DataFrame:
 ```
 
 #### Fomarting datetimes
+
 ```python
 def _format_datatime(df: DataFrame) -> DataFrame:
     print("Format datetime...")
@@ -123,6 +133,7 @@ def _format_datatime(df: DataFrame) -> DataFrame:
 ```
 
 #### Add columns
+
 ```python
 def _add_columns(df: DataFrame) -> DataFrame:
     return (
@@ -134,10 +145,13 @@ def _add_columns(df: DataFrame) -> DataFrame:
         )
     )
 ```
+
 ### Data warehouse
+
 Based on the _parking_ table (which has been the output of the second pipeline) two further tables are created using partition in order to optimize the queries for downstream tasks.
 
 For the left tile in the dashboard which shows the relative distribution of the parking transactions over the weekdays a partition by the _day_of_week_ column was implemented because the tile uses just the information about the days of the week.
+
 ```sql
 -- Partition by weekday
 -- Adapt the names of your project id, dataset and table accordingly
@@ -147,7 +161,7 @@ PARTITION BY
 AS
 SELECT
     *,
-    CASE 
+    CASE
       WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 1 THEN 'Sunday'
       WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 2 THEN 'Monday'
       WHEN EXTRACT(DAYOFWEEK FROM start_datetime) = 3 THEN 'Tuesday'
@@ -161,6 +175,7 @@ FROM
 ```
 
 For the tiles on the right side which shows the amount of transactions over the different month a partition by the _month_ column was considered reasonable because the data is sorted by month.
+
 ```sql
 -- Partition by month
 -- Adapt the names of your project id, dataset and table accordingly
@@ -173,18 +188,23 @@ SELECT *  FROM `traffic-fatalities-455213.parking_transactions.parking`;
 
 ### Dashboard
 
-**Output**  
+**Output**
+
 > [!NOTE]
 > The dashboard can be found [here](https://lookerstudio.google.com/reporting/f80ea899-3c74-466c-8167-719864046e90).
 
 ### Reproducibility
-#### Prerequisites  
+
+#### Prerequisites
+
 **Tools**
+
 - Python 3.12
 - Spark 3.3.2
 - Terraform 1.11.3
 
 **Python packages**
+
 - Install the packages listed inside [_requirements.txt_](requirements.txt) file in your environment.
 
 **Environment variables**  
@@ -194,10 +214,10 @@ Create an _.env_ file in your root directory based on the _.env.example_ file an
 Create a service account with admin permissions for Google Cloud Storage, Google BigQuery and Compute Engine
 
 > [!Note]  
-> Use `gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS` for authorizing with Google Cloud Platform with your service account in order to be able to create, access and upload Google Cloud Storage and Google BigQuery. 
-
+> Use `gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS` for authorizing with Google Cloud Platform with your service account in order to be able to create, access and upload Google Cloud Storage and Google BigQuery.
 
 #### Setup Infrastructure
+
 ```bash
 cd terraform/
 
@@ -205,13 +225,16 @@ cd terraform/
 terraform apply
 ```
 
-#### Execute pipeline 
+#### Execute pipeline
+
 In order to orchestrate the whole workflow from downloading _.csv_ file until uploading structured data to Google BigQuery run `python pipelines/end_to_end.py` from your root directory.
 
 #### Create the partitioned tables inside big query
+
 For creating the partitioned tables go to Google Cloud BigQuery and execute the sql commands listed in the [data-warehouse](#data-warehouse) section.
 
 ## Challenges
+
 - Setup of infrastructure like GCP, VM, installation of spark
 - Transforming datetime from US 12 hours format into unix-style datetime
 - Optimazation of table partition for downstream tasks
