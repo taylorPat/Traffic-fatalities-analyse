@@ -185,3 +185,4 @@ data/
 # terraform
 terraform/.*
 terraform/.terraform/*
+terraform/terraform.*
